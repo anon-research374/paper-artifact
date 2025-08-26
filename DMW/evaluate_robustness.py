@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-# evaluate_robustness.py
-"""
-Integrated steganography robustness evaluation pipeline.
-Combines text attacks, bit recovery, and robustness evaluation in one file.
-
-Pipeline: Attack Generation -> Bit Recovery -> Robustness Evaluation
-"""
-
 import json
 import time
 import random
@@ -21,10 +12,6 @@ import torch
 from transformers import AutoTokenizer, AutoModelForMaskedLM
 
 
-# ============================================================================
-# STEP 1: TEXT ATTACK CLASSES
-# ============================================================================
-
 class TextEditor:
     """Base class for text editing."""
 
@@ -36,7 +23,6 @@ class TextEditor:
 
 
 class GPTParaphraser(TextEditor):
-    """Paraphrase a text using the GPT model."""
 
     def __init__(self, openai_model: str = "gpt-4o-mini", prompt: str = None) -> None:
         """
@@ -49,8 +35,8 @@ class GPTParaphraser(TextEditor):
         self.openai_model = openai_model
         self.prompt = prompt or "Please rewrite the following text and keep its original meaning: "
         self.client = OpenAI(
-            base_url="https://api.zhizengzeng.com/v1",
-            api_key="sk-zk27db664ba75ff736cd546f54c1bee253368442b349221d"
+            base_url="",
+            api_key=""
         )
 
     def edit(self, text):
@@ -153,7 +139,7 @@ class WordInsertion(TextEditor):
     Randomly insert contextually relevant words into the text using a masked language model.
     """
 
-    def __init__(self, ratio: float, model_name: str = '/home/zlm/xuezhou/my_model/bert-base-uncased', device: str = 'cuda'):
+    def __init__(self, ratio: float, model_name: str = '', device: str = 'cuda'):
         """
         Initialize the word insertion editor.
 
@@ -168,8 +154,8 @@ class WordInsertion(TextEditor):
 
         # Initialize tokenizer and model from Hugging Face
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained('/home/zlm/xuezhou/my_model/bert-base-uncased')
-            self.model = AutoModelForMaskedLM.from_pretrained('/home/zlm/xuezhou/my_model/bert-base-uncased')
+            self.tokenizer = AutoTokenizer.from_pretrained('')
+            self.model = AutoModelForMaskedLM.from_pretrained('')
             self.model.to(self.device)
             self.model.eval()  # Set model to evaluation mode
             print("✅ WordInsertion model loaded successfully.")
@@ -235,12 +221,6 @@ class WordInsertion(TextEditor):
         return " ".join(edited_sentences)
 
 
-
-
-# ============================================================================
-# STEP 2: STEGANOGRAPHIC BIT RECOVERY
-# ============================================================================
-
 def recover_bit(text: str, bit_num: int, device: str, sent_to_code_func):
     """Recover steganographic bits from text."""
     stego_bit = []
@@ -263,29 +243,19 @@ def recover_bit(text: str, bit_num: int, device: str, sent_to_code_func):
 # ============================================================================
 
 def calculate_bit_accuracy(a: Optional[List[int]], b: Optional[List[int]], k: int) -> Tuple[int, int]:
-    """
-    计算比特级别的准确度。
-
-    返回:
-        一个包含 (匹配的比特数, 总比特数) 的元组。
-    """
     total_bits = k
     if a is None or b is None or k == 0:
-        return 0, total_bits  # 0 个匹配 / k 个总比特
+        return 0, total_bits
 
-    # 比较原始比特串的前缀和受攻击后的比特串
     original_prefix = a[:k]
 
-    # 处理恢复出的比特流比原始消息短的情况
     compare_len = min(len(original_prefix), len(b))
 
-    # 仅在重叠部分计算匹配的比特数
     matching_bits = sum(1 for i in range(compare_len) if original_prefix[i] == b[i])
 
     return matching_bits, total_bits
 
 def str2bits(bit_str: Optional[str]) -> Optional[List[int]]:
-    """Convert '[1,0,1]' → [1,0,1]; empty/null returns None"""
     if bit_str is None:
         return None
     bit_str = bit_str.strip()
@@ -305,10 +275,6 @@ def prefix_equal(a: Optional[List[int]], b: Optional[List[int]], k: int) -> bool
 
 
 def evaluate_attack_robustness(records: List[Dict], field: str) -> Dict[str, float]:
-    """
-    评估特定攻击字段的鲁棒性，同时计算消息准确度和比特准确度。
-    已修改：返回一个包含详细统计信息的字典。
-    """
     message_correct = total_records = 0
     total_bits = matching_bits = 0
 
@@ -317,17 +283,11 @@ def evaluate_attack_robustness(records: List[Dict], field: str) -> Dict[str, flo
         stego_bits = decode_bits(str2bits(rec.get("stego")))
         attack_bits = decode_bits(str2bits(rec.get(field)))
         k = int(rec.get("msg_size", 0))
-
-        # 1. 消息级别的准确度（“全对或全错”模式）
         if prefix_equal(stego_bits, attack_bits, k):
             message_correct += 1
-
-        # 2. 比特级别的准确度（计算单个正确的比特）
         match_count, total_count = calculate_bit_accuracy(stego_bits, attack_bits, k)
         matching_bits += match_count
         total_bits += total_count
-
-    # 计算最终的百分比
     message_acc = message_correct / total_records if total_records else 0.0
     bit_acc = matching_bits / total_bits if total_bits else 0.0
 
@@ -362,8 +322,6 @@ class SteganographyRobustnessEvaluator:
             device: Device for steganographic operations
         """
         self.device = device
-
-        # Initialize attack methods
         self.substitution_attack = SynonymSubstitution(ratio=substitution_ratio)
         self.deletion_attack = WordDeletion(ratio=deletion_ratio)
         self.insertion_attack = WordInsertion(ratio=insertion_ratio, device=device)
@@ -372,7 +330,6 @@ class SteganographyRobustnessEvaluator:
             prompt='Please rewrite the following text and keep its original meaning: '
         )
 
-        # Initialize steganography tools
         self.stego_initialized = False
         self.sent_to_code_func = None
 
@@ -400,11 +357,7 @@ class SteganographyRobustnessEvaluator:
             self.stego_initialized = False
 
     def apply_attacks(self, input_path: str, output_path: str, num_samples: Optional[int] = None) -> None:
-        """Apply text attacks to generate attacked versions."""
-        print("🔄 Step 1: Applying text attacks...")
         in_path, out_path = Path(input_path), Path(output_path)
-
-        # 使用更稳健的JSON/JSONL加载逻辑
         records: list[dict]
         try:
             with in_path.open("r", encoding="utf-8-sig") as f:
@@ -417,7 +370,6 @@ class SteganographyRobustnessEvaluator:
                 for line in f:
                     if line.strip(): records.append(json.loads(line))
 
-        # --- 核心修改：在这里应用样本数量限制 ---
         if num_samples is not None and num_samples > 0:
             if len(records) > num_samples:
                 print(f"  - Applying sample limit: Processing the first {num_samples} of {len(records)} records.")
@@ -425,7 +377,6 @@ class SteganographyRobustnessEvaluator:
             else:
                 print(
                     f"  - Sample limit ({num_samples}) is greater than or equal to total records ({len(records)}). Processing all records.")
-        # --- 修改结束 ---
 
         for i, item in enumerate(records):
             if i % 10 == 0: print(f"  Processing record {i + 1}/{len(records)}")
@@ -486,14 +437,8 @@ class SteganographyRobustnessEvaluator:
         )
         print(f"✅ Step 2 completed. Results saved: {out_path.resolve()}")
 
-    # 在 STEP 3 中，加入这个新函数
 
-    # 在 SteganographyRobustnessEvaluator 类中，替换掉已有的 evaluate_robustness 方法
     def evaluate_robustness(self, input_path: str) -> Dict[str, Dict[str, float]]:
-        """
-        评估隐写方法的鲁棒性。
-        已修改：处理并打印消息和比特两种准确度。
-        """
         print("🔄 Step 3: Evaluating robustness...")
 
         data_path = Path(input_path)
@@ -512,13 +457,9 @@ class SteganographyRobustnessEvaluator:
         print("-" * 65)
 
         for fld in test_fields:
-            # --- 这是需要修改的地方 ---
-            # 旧代码试图解包为3个变量: correct, total, acc = ...
-            # 新代码将返回的整个字典赋给一个变量: stats
             stats = evaluate_attack_robustness(records, fld)
             results[fld] = stats
 
-            # 使用新的 stats 字典来格式化打印结果
             msg_acc_str = f"{stats['message_accuracy']:.2%} ({stats['message_correct']}/{stats['total_records']})"
             bit_acc_str = f"{stats['bit_accuracy']:.2%} ({stats['bit_correct']}/{stats['total_bits']})"
 
@@ -538,7 +479,6 @@ class SteganographyRobustnessEvaluator:
         attacked_file = f"{base_name}_attacked.json"
         final_file = f"{base_name}_with_bits.json"
         try:
-            # 将 num_samples 传递给 apply_attacks
             self.apply_attacks(input_file, attacked_file, num_samples=num_samples)
             self.recover_steganographic_bits(attacked_file, final_file)
             results = self.evaluate_robustness(final_file)
@@ -561,14 +501,12 @@ def main():
     parser = argparse.ArgumentParser(description="Integrated steganography robustness evaluation pipeline")
     parser.add_argument("--input", "-i", required=True, help="Path to input JSON file with generated_sentence field")
 
-    # --- 核心修改：在这里添加新的命令行参数 ---
     parser.add_argument(
         "--num-samples",'--n',
         type=int,
-        default=None,  # 默认值为 None，表示处理所有样本
+        default=None,
         help="The maximum number of samples to process from the input file."
     )
-    # --- 修改结束 ---
 
     parser.add_argument("--cc-path", default="./sent_to_code/data/4_kmeans/cc.pt")
     parser.add_argument("--embedder-path", default="./sent_to_code/SemStamp-c4-sbert")
@@ -585,14 +523,13 @@ def main():
     )
 
     if args.step == "full":
-        # 将 num_samples 参数传递给主流程函数
         results = evaluator.run_full_pipeline(
             input_file=args.input,
             cc_path=args.cc_path,
             embedder_path=args.embedder_path,
             bit_length=args.bit_length,
             keep_intermediate=args.keep_intermediate,
-            num_samples=args.num_samples  # <-- 将参数传递进去
+            num_samples=args.num_samples
         )
         summary_file = f"{Path(args.input).stem}_robustness_summary.json"
         with open(summary_file, 'w', encoding='utf-8') as f:
@@ -601,19 +538,16 @@ def main():
 
     elif args.step == "attack":
         output_file = f"{Path(args.input).stem}_attacked.json"
-        # 将 num_samples 参数也传递给 attack-only 步骤
         evaluator.apply_attacks(args.input, output_file, num_samples=args.num_samples)
 
 
     elif args.step == "recover":
-        # Run only recovery step
         input_file = f"{Path(args.input).stem}_attacked.json"
         output_file = f"{Path(args.input).stem}_with_bits.json"
         evaluator.initialize_steganography(args.cc_path, args.embedder_path, args.bit_length)
         evaluator.recover_steganographic_bits(input_file, output_file)
 
     elif args.step == "evaluate":
-        # Run only evaluation step
         input_file = f"{Path(args.input).stem}_with_bits.json"
         results = evaluator.evaluate_robustness(input_file)
 
