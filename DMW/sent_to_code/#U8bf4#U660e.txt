@@ -1,0 +1,3 @@
+data里的数据是从1_load_c4.py得到的。
+9_kmeans.py聚类得到cc.pt，各聚类中心。
+10sent_to_code.py实现了给定sentence得到比特串或None的过程。
