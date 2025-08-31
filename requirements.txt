@@ -1,0 +1,15 @@
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+transformers>=4.36.0
+sentence-transformers>=2.2.2
+datasets>=2.14.0
+
+numpy>=1.24.0
+tqdm>=4.65.0
+nltk>=3.8.1
+jsonlines>=4.0.0
+requests>=2.31.0
+openai>=1.0.0
+kmeans-pytorch>=0.3
