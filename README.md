@@ -1,6 +1,6 @@
 ## 📂 Project Structure
 
-- **DMW/DMW/dataset/**  
+- **DMW/dataset/**  
   Contains datasets included C4 dataset and OpenGen dataset.  
 
 - **DMW/sent_to_code/**  
