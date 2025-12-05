@@ -30,6 +30,27 @@
 
 ---
 
+Before running any scripts, please download the following Hugging Face model:
+
+Model: AbeHou/SemStamp-c4-sbert
+
+Download the model folder and place it under:
+
+./sent_to_code/
+
+
+Your directory structure should look like:
+
+sent_to_code/
+    ├── SemStamp-c4-sbert/
+    ├── data/
+    ├── sent_to_code.py
+    └── ...
+
+
+This model is required for the semantic encoding and bitstring projection modules.
+
+
 ## ⚙️ Environment Setup
 
 It is recommended to use Conda:
