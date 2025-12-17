@@ -23,8 +23,10 @@ import difflib
 import ssl
 import requests
 from collections import Counter
-import nltk
 import argparse
+import nltk
+nltk.download('punkt_tab')
+
 
 try:
     nltk.data.find('tokenizers/punkt')
@@ -261,18 +263,9 @@ class LLMSimulator:
             first_sentence = sentences[0] if sentences else ""
             if not first_sentence:
                 continue
-            bitstring = sent_to_code(first_sentence, device, 0.03)
+            bitstring = sent_to_code(first_sentence, device, 0.001)
             if bitstring:
                 results.append((" " + first_sentence, bitstring))
-        if self.debug_mode:
-            print("\n" + "#" * 80)
-            print(f"DEBUG | {time.strftime('%Y-%m-%d %H:%M:%S')} | predict call")
-            print(f"PROMPT: '{prompt}'")
-            print(f"REQUESTED: {num_candidates} candidates | GENERATED: {len(results)} valid candidates")
-            print("-" * 80)
-            for i, (sentence, bitstring) in enumerate(results):
-                print(f"  [{i + 1:02d}/{len(results):02d}] Sentence: '{sentence.strip()}' | Bitstring: {bitstring}")
-            print("#" * 80 + "\n")
         if num_candidates == 1:
             return results[0] if results else (" ", None)
         else:
@@ -299,7 +292,7 @@ class LLMDataProcessing():
         self.window_size = window_size
         self.device = device
         self.bitstring_cache = {}
-        self.debug_mode = True
+        self.debug_mode = False
         self.ppl_model = AutoModelForCausalLM.from_pretrained(ppl_model_path, torch_dtype=torch.bfloat16).to(self.device)
         self.ppl_tokenizer = AutoTokenizer.from_pretrained(ppl_model_path)
 
@@ -350,7 +343,7 @@ class LLMDataProcessing():
         entropy_cost = self.evaluate_entropy(input)
         full_text = input + sentence
         ppl_cost = self.sentence_perplexity(full_text, self.window_size)
-        print(f'entropy cost:{entropy_cost},ppl cost :{ppl_cost}')
+        # print(f'entropy cost:{entropy_cost},ppl cost :{ppl_cost}')
         if ppl_cost > MAX_PPL_COST: MAX_PPL_COST = ppl_cost
         if ppl_cost < MIN_PPL_COST: MIN_PPL_COST = ppl_cost
         epsilon = 1e-9
@@ -371,7 +364,7 @@ class LLMDataProcessing():
                 cost = self.compute_cost(current_prompt, opt_sen)
                 epsilon = 1e-9
                 cost_cluster = compute_cost_cosine(opt_sen)
-                print(f'cost_cluster:{cost_cluster}')
+                # print(f'cost_cluster:{cost_cluster}')
                 if cost_cluster > MAX_robust_COST:
                     MAX_robust_COST = cost_cluster
                 elif cost_cluster < MIN_robust_COST:
@@ -380,7 +373,7 @@ class LLMDataProcessing():
                 cost += cost_cluster
                 self.sen_cost.append([cost] * self.bit_num)
                 return
-            print(f"Warning: Failed to generate a valid sentence/bitstring (Attempt {attempt + 1}/{max_retries}). Retrying...")
+            # print(f"Warning: Failed to generate a valid sentence/bitstring (Attempt {attempt + 1}/{max_retries}). Retrying...")
             time.sleep(1)
         raise RuntimeError(f"FATAL: Failed to generate a valid cover sentence for prompt '{current_prompt[:100]}...' after {max_retries} attempts.")
 
@@ -393,20 +386,10 @@ class LLMDataProcessing():
                     if bitstring not in self.bitstring_cache:
                         self.bitstring_cache[bitstring] = sen.strip()
                     if bitstring == obj_bitstring:
-                        if self.debug_mode:
-                            print(f"[DEBUG|generate_special_sen]     > SUCCESS: Generated a new sentence for '{obj_bitstring}'.")
                         return " " + sen
-        if self.debug_mode:
-            print(f"[DEBUG|generate_special_sen]   ! Phase 1 FAILED. No new sentence generated.")
-            print(f"[DEBUG|generate_special_sen]   Phase 2: Searching for '{obj_bitstring}' in the global cache...")
-        print(self.bitstring_cache)
         if obj_bitstring in self.bitstring_cache:
             fallback_sentence = " " + self.bitstring_cache[obj_bitstring]
-            if self.debug_mode:
-                print(f"[DEBUG|generate_special_sen]     > FALLBACK SUCCESS: Found a pre-existing sentence for '{obj_bitstring}' in cache.")
             return fallback_sentence
-        if self.debug_mode:
-            print(f"[DEBUG|generate_special_sen]   ! Phase 2 FAILED. Bitstring '{obj_bitstring}' not found in cache.")
         raise ValueError(f"FATAL: Failed to GENERATE a new sentence AND could not FIND any existing sentence for bitstring '{obj_bitstring}'.")
 
     def split_bits(self, bits):
@@ -440,7 +423,6 @@ class LLMDataProcessing():
                     sen = original_cover_sentence
                     if self.debug_mode:
                         original_bits_str = ''.join(map(str, original_cover_bits_arr))
-                        print(f"[DEBUG|generate_seg_sen]     ! FALLBACK: Generation failed. Using original sentence with bits '{original_bits_str}'.")
             generated_sentences.append(sen.strip())
             i += 1
         final_segment = " ".join(generated_sentences)
@@ -499,10 +481,8 @@ def llm_data_hiding(alpha, mat_height, msg, seg, bit_num, prompt, model, tokeniz
 
 
 def recover_bit(text: str, bit_num: int, device):
-    print(f'final_text:{text}')
     stego_bit = []
     sentences = sent_tokenize(text)
-    print(f'sentences:{sentences}')
     if len(sentences) <= 1:
         return []
     for sentence in sentences:
@@ -518,18 +498,33 @@ def recover_bit(text: str, bit_num: int, device):
     return stego_bit
 
 
-def load_and_sample_data(file_path, num_samples):
-    with open(file_path, "r") as f:
-        obj = json.load(f)
-    if isinstance(obj, list):
-        data = [r for r in obj if "prompt" in r and "natural_text" in r]
-    elif isinstance(obj, dict):
-        data = [obj] if "prompt" in obj and "natural_text" in obj else []
-    else:
-        data = []
-    if len(data) <= num_samples:
-        return data
-    return random.sample(data, num_samples)
+# def load_and_sample_data(file_path, num_samples):
+#     with open(file_path, "r") as f:
+#         obj = json.load(f)
+#     if isinstance(obj, list):
+#         data = [r for r in obj if "prompt" in r and "natural_text" in r]
+#     elif isinstance(obj, dict):
+#         data = [obj] if "prompt" in obj and "natural_text" in obj else []
+#     else:
+#         data = []
+#     if len(data) <= num_samples:
+#         return data
+#     return random.sample(data, num_samples)
+
+import json, random
+
+def load_and_sample_data(path, sample_size):
+    data = []
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            data.append(json.loads(line))
+    if sample_size and sample_size < len(data):
+        data = random.sample(data, sample_size)
+    return data
+
 
 
 def save_results_to_file(results_list, output_file):
@@ -636,7 +631,7 @@ def main():
             try:
                 if retry_count > 0:
                     msg = np.random.randint(0, 2, size=msg_size, dtype='uint8')
-                    print(f"[RETRY {retry_count}/{max_retries}] Regenerating with new message: {msg}")
+                    # print(f"[RETRY {retry_count}/{max_retries}] Regenerating with new message: {msg}")
                 start_time = time.time()
                 sen, stego, recover_stego = llm_data_hiding(
                     alpha, mat_height, msg, seg, bit_number, prompt, model, tokenizer, seg_num, wq, we, wr, window_size, device,
@@ -648,9 +643,9 @@ def main():
                 error_msg = str(e)
                 if "FATAL: Failed to GENERATE" in error_msg:
                     retry_count += 1
-                    print(f"[RETRY {retry_count}/{max_retries}] Generation failed: {e}")
+                    # print(f"[RETRY {retry_count}/{max_retries}] Generation failed: {e}")
                     if retry_count >= max_retries:
-                        print(f"[ERROR] Sample {i} failed after {max_retries} retries, skipping...")
+                        # print(f"[ERROR] Sample {i} failed after {max_retries} retries, skipping...")
                         break
                     torch.cuda.empty_cache()
                     time.sleep(1)
