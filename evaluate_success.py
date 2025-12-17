@@ -214,7 +214,7 @@ def main():
         print(f"Total number of analyzed objects:{processed_count}")
         print(f"Number of failed or skipped objects processed:{error_count}")
         print(f"✅ Number of consistent objects in the message section:{identical_count}")
-        print(f"❌ Number of inconsistent objects in the message section:different_count}")
+        print(f"❌ Number of inconsistent objects in the message section:{different_count}")
 
         if processed_count > 0:
             accuracy = (identical_count / processed_count) * 100
