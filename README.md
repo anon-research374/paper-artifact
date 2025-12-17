@@ -63,7 +63,7 @@ pip install -r requirements.txt
 
 
 python generate_core.py \
-  --input-file dataset/c4/processed_c4.json \
+  --input-file dataset/openGen/processed_OpenGen.json \
   --sample-size 100 \
   --model-path path_to_your_model \
   --ppl-model-path path_yo_your_model \
@@ -83,7 +83,9 @@ python evaluate_success.py \
 --i results.json \
 --bit-num 4 \
 --cc-path sent_to_code/data/4_kmeans/cc.pt \
---embedder-path path_to_your_model
+--embedder-path path_to_your_model  \
+--h your_h  \
+--seg your_seg
 
 python evaluate_robustness.py --i results.json
 
