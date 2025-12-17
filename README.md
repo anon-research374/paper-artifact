@@ -92,5 +92,5 @@ python evaluate_success.py \
 --h your_h  \
 --seg your_seg
 
-python evaluate_robustness.py --i results.json
+python evaluate_robustness.py -i results.json
 
