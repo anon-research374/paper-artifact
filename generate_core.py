@@ -561,7 +561,7 @@ def generate_output_filename(msg_size, alpha, bit_number, seg, wq, we, wr, mat_h
 
 def main():
     parser = argparse.ArgumentParser(description="Run LLM data hiding with custom parameters.")
-    parser.add_argument('--input-file', type=str, default="dataset/c4/processed_c4_sen.json", help='Path to the input data file.')
+    parser.add_argument('--input-file', type=str, default="dataset/openGen/processed_OpenGen.jsonl", help='Path to the input data file.')
     parser.add_argument('--sample-size', type=int, default=30, help='Number of samples to process from the input file.')
     parser.add_argument('--model-path', type=str, default="models/opt-1.3b", help='Path to the main generation language model.')
     parser.add_argument('--ppl-model-path', type=str, default="models/opt-2.7b", help='Path to the language model used for perplexity calculation.')
