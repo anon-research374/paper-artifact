@@ -562,9 +562,9 @@ def generate_output_filename(msg_size, alpha, bit_number, seg, wq, we, wr, mat_h
 def main():
     parser = argparse.ArgumentParser(description="Run LLM data hiding with custom parameters.")
     parser.add_argument('--input-file', type=str, default="dataset/openGen/processed_OpenGen.jsonl", help='Path to the input data file.')
-    parser.add_argument('--sample-size', type=int, default=30, help='Number of samples to process from the input file.')
-    parser.add_argument('--model-path', type=str, default="models/opt-1.3b", help='Path to the main generation language model.')
-    parser.add_argument('--ppl-model-path', type=str, default="models/opt-2.7b", help='Path to the language model used for perplexity calculation.')
+    parser.add_argument('--sample-size', type=int, default=100, help='Number of samples to process from the input file.')
+    parser.add_argument('--model-path', type=str, help='Path to the main generation language model.')
+    parser.add_argument('--ppl-model-path', type=str, help='Path to the language model used for perplexity calculation.')
     parser.add_argument('--stc-matrix-path', type=str, default='STC_code/stc_matrix.npy', help='Path to the pre-calculated STC matrix file.')
     parser.add_argument('--cc-path', type=str, default='./sent_to_code/data/4_kmeans/cc.pt', help='Path to the cc.pt file for sent_to_code.')
     parser.add_argument('--embedder-path', type=str, default='./sent_to_code/SemStamp-c4-sbert', help='Path to the sentence embedder model.')
