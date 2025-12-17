@@ -85,7 +85,7 @@ def evaluate_perplexity(input_file: str, output_file: str, device: str = "cuda:3
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser)
+    parser = argparse.ArgumentParser()
     parser.add_argument('--i', type=str)
     args = parser.parse_args()
     input_file = args.i
