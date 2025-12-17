@@ -68,7 +68,7 @@ pip install -r requirements.txt
 
 
 python generate_core.py \
-  --input-file dataset/openGen/processed_OpenGen.json \
+  --input-file dataset/openGen/processed_OpenGen.jsonl \
   --sample-size 100 \
   --model-path path_to_your_model \
   --ppl-model-path path_yo_your_model \
