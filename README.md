@@ -20,6 +20,7 @@
 
 - **evaluate_robustness.py**  
   Script that applies adversarial attacks to generated text and produces attacked result files.
+  
 
 - **evaluate_semantic.py**  
   Semantic quality evaluation (Semantic Entropy).  
@@ -49,6 +50,10 @@ sent_to_code/
 
 
 This model is required for the semantic encoding and bitstring projection modules.
+
+
+**Word Insertion Attack Note**.
+For the word insertion adversarial attack, we use the pretrained masked language model **bert-base-uncased** to generate context-aware word insertions. Please download this model from Hugging Face and specify its local path in the corresponding attack implementation
 
 
 ## ⚙️ Environment Setup
