@@ -1,3 +1,4 @@
+```
 ## 📂 Project Structure
 
 - **DMW/dataset/**  
@@ -31,6 +32,7 @@
 
 ---
 
+##  🗂️ Preparation
 Before running any scripts, please download the following Hugging Face model:
 
 Model: AbeHou/SemStamp-c4-sbert
@@ -55,9 +57,6 @@ This model is required for the semantic encoding and bitstring projection module
 **Word Insertion Attack Note**.
 For the word insertion adversarial attack, we use the pretrained masked language model **bert-base-uncased** to generate context-aware word insertions. Please download this model from Hugging Face and specify its local path in the corresponding attack implementation
 
-
-## ⚙️ Environment Setup
-
 It is recommended to use Conda:
 
 ```bash
@@ -66,6 +65,7 @@ conda activate dmw
 
 pip install -r requirements.txt
 
+## ⚙️ Running Script Example
 
 python generate_core.py \
   --input-file dataset/openGen/processed_OpenGen.jsonl \
@@ -93,4 +93,4 @@ python evaluate_success.py \
 --seg your_seg
 
 python evaluate_robustness.py -i results.json
-
+```
